@@ -25,8 +25,10 @@ Data1 <- na.omit(Data) # remove NA for correlations
 # Scatterplot matrix and pearson correlations
 pairs(Data1[,c("JIF_5yr", "Eigenfactor", "AI", "Cites2011")], upper.panel=panel.smooth, lower.panel=panel.cor)
 
-cor(Data1[,c("JIF_5yr", "Eigenfactor", "AI", "Cites2011")], method="pearson")
-cor(Data1[,c("JIF_5yr", "Eigenfactor", "AI", "Cites2011")], method="spearman")
+Corr.Pearson <- cor(Data1[,c("JIF_5yr", "Eigenfactor", "AI", "Cites2011")], method="pearson") # assumes linear relationships
+Corr.Spearman <- cor(Data1[,c("JIF_5yr", "Eigenfactor", "AI", "Cites2011")], method="spearman") # assumes monotonic but not necessarily linear relationships
+
+Corr.Spearman - Corr.Pearson # greater than 0 indicates monotonic but not linear
 
 # Examine relationship of EF and JIF more closely
 plot(Data1$Eigenfactor, Data1$JIF_5yr)
@@ -44,7 +46,7 @@ lines(log(Data1$Eigenfactor), fitted(lm.JIF.EF), col='red')
 text(-7.5, 2.1, labels=expression(paste(R^2==0.6404)))
 text(-7.5, 2.6, labels=expression(paste(log[e](JIF)==3.26 + 0.471%*%log[e](Eigenfactor))))
 
-# Test 
+# Models and tests of relationships
 source('/Users/Dan/Documents/Statistics/R/Functions/Xiao_Power_Function.R') # Reference: Xiao et al. 2011 Ecology
 
 power_analysis(x=Data1$Eigenfactor, y=Data1$JIF_5yr, output_plot=TRUE) # Error appears multiplicative (log regresion better)
