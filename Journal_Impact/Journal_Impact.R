@@ -85,6 +85,7 @@ panel.diff <- function(x,y, digits=2, prefix="", cex.cor){
   text(0.5, 0.5, txt, cex = 1)
 }
 
+
 Pearson.Pairs <- Data1[,c("JIF", "JIF5", "AI", "SNIP", "SJR", "hn_index")]
 pairs(Pearson.Pairs, upper.panel=panel.smooth, lower.panel=panel.cor2, diag.panel=panel.hist)
 
@@ -101,8 +102,11 @@ for(i in 1:length(Pairs2)){
 }
 
 PairsRank <- Data1[,c("JIF_Rank", "JIF5_Rank", "AI_Rank", "SNIP_Rank", "SJR_Rank", "EF_Rank", "H_Rank", "Hc_Rank", "g_Rank", "e_Rank", "AR_Rank")]
-pairs(Pairs2, upper.panel=panel.smooth, lower.panel=panel.cor2, diag.panel=panel.hist)
-pairs(PairsRank, upper.panel=panel.diff, lower.panel=panel.cor2)
+
+#pdf("Scatterplot-Matrix.pdf", )
+pairs(Pairs2, upper.panel=panel.smooth, lower.panel=panel.cor.spear, diag.panel=panel.hist)
+
+pairs(PairsRank, upper.panel=panel.diff, lower.panel=panel.cor.spear)
 
 
 # Histogram of journals AI
