@@ -85,6 +85,29 @@ panel.diff <- function(x,y, digits=2, prefix="", cex.cor){
   text(0.5, 0.5, txt, cex = 1)
 }
 
+panel.cor <- function(x,y, method = "spearman", use = "everything", digits=2, prefix="", cex.cor){
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  if(method == "spearman"){
+    Cor <- cor(x, y, method="spearman", use = use)
+  }
+  if(method == "pearson"){
+    Cor <- cor(x, y, method="pearson", use = use)
+  } 
+  if(method == "kendall") {
+    Cor <- cor(x, y, method = "kendall", use = use)
+    } else {
+    stop("\nThe type of correlation must be spearman, pearson, or kendall\n")
+  }
+  txt <- format(c(r, 0.123456789), digits=digits)[1]
+  txt <- paste(prefix, txt, sep="")
+  #if(missing(cex.cor)) cex <- 0.9/strwidth(txt)
+  text(0.5, 0.5, txt, cex = 1.5)
+  #text(0.9, 0.9, Cor.Type, cex = 1)
+}
+
+#pdf("Scatterplot-Matrix.pdf", )
+pairs(Pairs2, upper.panel=panel.smooth, lower.panel=panel.cor.spear, diag.panel=panel.hist)
 
 Pearson.Pairs <- Data1[,c("JIF", "JIF5", "AI", "SNIP", "SJR", "hn_index")]
 pairs(Pearson.Pairs, upper.panel=panel.smooth, lower.panel=panel.cor2, diag.panel=panel.hist)
@@ -103,14 +126,112 @@ for(i in 1:length(Pairs2)){
 
 PairsRank <- Data1[,c("JIF_Rank", "JIF5_Rank", "AI_Rank", "SNIP_Rank", "SJR_Rank", "EF_Rank", "H_Rank", "Hc_Rank", "g_Rank", "e_Rank", "AR_Rank")]
 
-#pdf("Scatterplot-Matrix.pdf", )
-pairs(Pairs2, upper.panel=panel.smooth, lower.panel=panel.cor.spear, diag.panel=panel.hist)
 
 pairs(PairsRank, upper.panel=panel.diff, lower.panel=panel.cor.spear)
 
 
 # Histogram of journals AI
 hist(Data1$AI, breaks=10, freq=FALSE)
+
+
+#------------NMDS-------------
+# Non-metric Multidimensional Scaling for ordination of the metrics
+
+library(vegan)
+ord <- metaMDS(Pairs2, trymax = 10000, autotransform = TRUE)
+ord
+plot(ord)
+text(ord, display = "species")
+Grps <- as.factor(c("JIF", "JIF5", "AI", "SNIP", "SJR", "Eigenfactor", "h_index", "hc_index", "g_index", "e_index", "AR_index"))
+plot(ord, disp = "sites", type="n")
+ordihull(ord, Grps, col = "blue")
+ordiellipse(ord, Grps, col = 3, lwd = 2)
+ordispider(ord, Grps, col = "red", label = TRUE)
+points(ord, disp = "sites", pch = 21, col = "red", bg = "yellow", cex = 1.3)
+
+
+ord <- metaMDS(dune)
+plot(ord)
+
+ordispider(ord, dune.env$Management, col = "red", label = TRUE)
+ordihull(ord, Mangement, col = "blue")
+ordihull(ord, dune$Mangement, col = "blue")
+plot(ord, disp = "sites", type="n")
+ordihull(ord, dune$Mangement, col = "blue")
+ordiellipse(ord, dune$Management, col = 3, lwd = 2)
+data(dune.env)
+plot(ord, disp = "sites", type="n")
+ordihull(ord, dune$Mangement, col = "blue")
+ordiellipse(ord, dune$Management, col = 3, lwd = 2)
+ordihull(ord, dune.env$Mangement, col = "blue")
+ordiellipse(ord, dune.env$Management, col = 3, lwd = 2)
+points(ord, disp = "sites", pch = 21, col = "red", bg = "yellow", cex = 1.3)
+ordispider(ord, dune.env$Management, col = "red", label = TRUE)
+
+
+#-------------PCA------------
+
+library(FactoMineR)
+citation()
+citation("FactoMineR")
+
+pca.result <- PCA(cor(Pairs2, method = "spearman"))
+par (mar=c(3.5,3.5,2,1), mgp=c(2,0.5,0), tck=-.01)
+plot.PCA(pca.result, title = "", xlim = c(-4.5, 4.5), ylim = c(-3, 3))
+plot.PCA(pca.result, ellipse)
+plot.PCA(pca.result, choix = "var")
+
+summary(pca.result)
+
+prince.fit <- princomp(cor(Pairs2, method = "spearman"))
+summary(prince.fit)
+loadings(prince.fit)
+plot(prince.fit)
+biplot(prince.fit)
+
+prcomp(cor(Pairs2, method = "spearman"))
+biplot(prcomp(cor(Pairs2, method = "spearman")))
+
+require(KernSmooth)
+smoothScatter()
+
+require(RColorBrewer)
+n <- length(pca.result$ind$coord[,1])
+g <- 11
+
+my.cols <- brewer.pal(g, "YlOrRd")
+par(new = TRUE)
+smoothScatter(pca.result$ind$coord[,1], pca.result$ind$coord[,2], nbin = 200, colramp = colorRampPalette(my.cols), xlab = "", nrpoints = 11, pch = 19, cex = 0.3, col = 1)
+text(c(-2.8, -3.0, -3.4, -2.8, -2.8, 2.8, 3.1, 2.5, 2.8, 1.8, 3.8), c(.16, .46, -.59, -.90, .07, -1.6, .5, 1.1, 1.4, 1.5, -2.1) , labels=c("JIF", "JIF5", "AI", "SNIP", "SJR", "Eigenfactor", "h-index", "hc-index", "g-index", "e-index", "AR-index"))
+
+install.packages('extrafont')
+library(extrafont)
+font_import() # tries to detect TrueType fonts on computer
+# Only necessary in session where you ran font_import()
+loadfonts()
+# For PostScript output, use loadfonts(device="postscript")
+loadfonts(device="postscript", quiet = TRUE)
+# Suppress output with loadfonts(quiet=TRUE)
+
+# Vector of font family names
+fonts()
+
+# Show entire table
+fonttable()
+
+par (mar=c(3.5,3.5,1,1), mgp=c(2,0.5,0), tck=-.01)
+bitmap("PCA-color.tiff", height = 12, width = 17, units = 'cm', type="tifflzw", res=300, family = "Arial",  colormodel = "RGB")
+tiff("PCA-color.tiff", height = 8, width = 10, units = 'in', res = 300, family = "Arial", compression="lzw")
+postscript("PCA-color.eps", width = 8, height = 10, 
+           horizontal = FALSE, onefile = FALSE, paper = "special", 
+           colormodel = "cmyk", family = "Arial")
+smoothScatter(pca.result$ind$coord[,1], pca.result$ind$coord[,2], bandwidth = c(0.85, 0.5), nbin = 500, colramp = colorRampPalette(my.cols), xlab = "PC1 (81.9%)", ylab = "PC2 (11.5%)", nrpoints = 0, pch = 19, cex = 0.3, col = 1)
+abline(h = 0, lty = 2)
+abline(v = 0, lty = 2)
+text(c(-3.1, -3.2, -3.8, -3, -3, 2.6, 2.9, 2.4, 2.55, 1.56, 3.7), c(.21, .47, -.59, -.9, 0.05, -1.6, 0.49, 1.1, 1.4, 1.45, -2.1), labels=c("JIF", "JIF5", "AI", "SNIP", "SJR", "Eigenfactor", "h-index", "hc-index", "g-index", "e-index", "AR-index"), col = "white", cex = 1.2)
+dev.off()
+
+
 
 # ------------Examine relationship of EF and JIF more closely---------
 plot(Data1$Eigenfactor, Data1$JIF5)
